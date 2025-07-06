@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Platform>x86</Platform>
+		<PlatformTarget>x86</PlatformTarget>
+	</PropertyGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="PowerService">
+      <HintPath>..\..\..\..\RiderProjects\axso_etrm_coding_challenge\netstandard2.0\PowerService.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
