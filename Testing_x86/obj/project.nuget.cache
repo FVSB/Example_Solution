@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "CaoA2QcL6HQ=",
+  "dgSpecHash": "2rmBE0uo5hc=",
   "success": true,
   "projectFilePath": "C:\\Users\\dell\\source\\repos\\Testing_x86\\Testing_x86\\Testing_x86.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\dell\\.nuget\\packages\\csvhelper\\33.1.0\\csvhelper.33.1.0.nupkg.sha512"
+  ],
   "logs": []
 }

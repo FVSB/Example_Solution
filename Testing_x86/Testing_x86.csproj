@@ -18,4 +18,12 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="datos\" />
+  </ItemGroup>
+
 </Project>

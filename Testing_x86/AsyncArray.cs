@@ -159,4 +159,13 @@ public class AsyncDoubleArray : AsyncArray<double>
             }
         }
     }
+
+    public double[] GetArray()
+    {
+        lock (this._array)
+        {
+            return (double[])this._array.Clone(); // Devuelve una copia segura
+        }
+    }
+
 }

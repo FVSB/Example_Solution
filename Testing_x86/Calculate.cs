@@ -4,30 +4,36 @@ namespace PowerPositionCalculator;
 public static class Calculate
 {
 
-    public static async void Worker(DateTime date)
+    public static async Task<double[]> Worker(DateTime date)
     {
 
         var service = new PowerService();
 
-        IEnumerable<PowerTrade> trades = service.GetTrades(date);
-
-        // Un diccionario para sumar volúmenes por período
-        var periodVolumes = new Dictionary<int, double>();
+        var trades = await  service.GetTradesAsync(date);
 
         var asyncArray = new AsyncDoubleArray(24);
+
         var tasks = new List<Task>();
 
-        foreach (var trade in trades)
+        var options = new ParallelOptions { MaxDegreeOfParallelism = 10 };
+        await Parallel.ForEachAsync(trades, options, async (trade, ct) =>
         {
-            tasks.Add(HiloHandle(asyncArray, trade));
-        }
+            await HiloHandle(asyncArray, trade);
+        });
+
+
+
 
 
 // Esperar a que todas las tareas terminen
+        int a=1;
         await foreach (var item in asyncArray)
         {
-            Console.WriteLine(item);
+            Console.WriteLine($"Item:{item}, index:{a++}");
+
         }
+
+        return asyncArray.GetArray();
 
     }
 
