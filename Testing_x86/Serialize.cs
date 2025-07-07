@@ -18,13 +18,13 @@ public static class CsvGenerator
 {
     private static readonly object _fileLock = new object();
 
-    public static async Task CrearCsvPowerPositionAsync(double[] volumes, string folderPath)
+    public static async Task CrearCsvPowerPositionAsync(double[] volumes, string folderPath,DateTime dateTime)
     {
         if (volumes == null || volumes.Length != 24)
             throw new ArgumentException("El array debe tener exactamente 24 elementos.");
 
-        var now = DateTime.Now;
-        string fileName = $"PowerPosition_{now:yyyyMMdd}_{now:HHmm}.csv";
+
+        string fileName = $"PowerPosition_{dateTime:yyyyMMdd}_{dateTime:HHmm}.csv";
         string fullPath = Path.Combine(folderPath, fileName);
 
         var records = new List<PowerPositionRecord>();
