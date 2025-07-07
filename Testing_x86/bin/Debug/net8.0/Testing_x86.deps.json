@@ -11,6 +11,7 @@
           "CommandLineParser": "2.9.1",
           "CsvHelper": "33.1.0",
           "ErrorOr.Extensions": "1.3.0",
+          "LanguageExt.Core": "5.0.0-beta-54",
           "Microsoft.Extensions.Configuration": "10.0.0-preview.5.25277.114",
           "Microsoft.Extensions.Configuration.Binder": "10.0.0-preview.5.25277.114",
           "Microsoft.Extensions.Configuration.FileExtensions": "10.0.0-preview.5.25277.114",
@@ -54,6 +55,14 @@
           "lib/netstandard2.0/ErrorOrExtensions.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "LanguageExt.Core/5.0.0-beta-54": {
+        "runtime": {
+          "lib/net8.0/LanguageExt.Core.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.0.0"
           }
         }
       },
@@ -248,6 +257,13 @@
       "sha512": "sha512-0JtSrEyD4Ml9BQSQvWQlxDP0LT6OIeSza0PMNnsQTzNj/J9KLCBL4hibm0TktShTKxx+pYgEr6TezbZgEbVeHQ==",
       "path": "erroror.extensions/1.3.0",
       "hashPath": "erroror.extensions.1.3.0.nupkg.sha512"
+    },
+    "LanguageExt.Core/5.0.0-beta-54": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-hjEB7AbVt5fhjXDHalBwW+gz6cw2PfLT6R20NMUkEnt6Yii74Hdp7TBHjAcLkYNgsrKikk+wuyRTDB426kKmLg==",
+      "path": "languageext.core/5.0.0-beta-54",
+      "hashPath": "languageext.core.5.0.0-beta-54.nupkg.sha512"
     },
     "Microsoft.Extensions.Configuration/10.0.0-preview.5.25277.114": {
       "type": "package",

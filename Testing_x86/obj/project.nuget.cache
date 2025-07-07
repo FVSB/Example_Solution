@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "wrMGzXV55qY=",
+  "dgSpecHash": "Bxr6dHvTmF0=",
   "success": true,
   "projectFilePath": "C:\\Users\\dell\\source\\repos\\Testing_x86\\Testing_x86\\Testing_x86.csproj",
   "expectedPackageFiles": [
@@ -8,6 +8,7 @@
     "C:\\Users\\dell\\.nuget\\packages\\csvhelper\\33.1.0\\csvhelper.33.1.0.nupkg.sha512",
     "C:\\Users\\dell\\.nuget\\packages\\erroror\\1.9.0\\erroror.1.9.0.nupkg.sha512",
     "C:\\Users\\dell\\.nuget\\packages\\erroror.extensions\\1.3.0\\erroror.extensions.1.3.0.nupkg.sha512",
+    "C:\\Users\\dell\\.nuget\\packages\\languageext.core\\5.0.0-beta-54\\languageext.core.5.0.0-beta-54.nupkg.sha512",
     "C:\\Users\\dell\\.nuget\\packages\\microsoft.extensions.configuration\\10.0.0-preview.5.25277.114\\microsoft.extensions.configuration.10.0.0-preview.5.25277.114.nupkg.sha512",
     "C:\\Users\\dell\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.0-preview.5.25277.114\\microsoft.extensions.configuration.abstractions.10.0.0-preview.5.25277.114.nupkg.sha512",
     "C:\\Users\\dell\\.nuget\\packages\\microsoft.extensions.configuration.binder\\10.0.0-preview.5.25277.114\\microsoft.extensions.configuration.binder.10.0.0-preview.5.25277.114.nupkg.sha512",

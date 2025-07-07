@@ -63,6 +63,10 @@
               "target": "Package",
               "version": "[1.3.0, )"
             },
+            "LanguageExt.Core": {
+              "target": "Package",
+              "version": "[5.0.0-beta-54, )"
+            },
             "Microsoft.Extensions.Configuration": {
               "target": "Package",
               "version": "[10.0.0-preview.5.25277.114, )"

@@ -4,11 +4,12 @@ using System.IO;
 using System.Threading.Tasks;
 using CsvHelper;
 using System.Collections.Generic;
+using ErrorOr;
 
 namespace PowerPositionCalculator;
 
 
-public class PowerPositionRecord
+public record PowerPositionRecord
 {
     public string LocalTime { get; set; }
     public double Volume { get; set; }
@@ -18,8 +19,9 @@ public static class CsvGenerator
 {
     private static readonly object _fileLock = new object();
 
-    public static async Task CrearCsvPowerPositionAsync(double[] volumes, string folderPath,DateTime dateTime)
+    public static async Task<LanguageExt.Unit> CrearCsvPowerPositionAsync(double[] volumes, string folderPath,DateTime dateTime,CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
         if (volumes == null || volumes.Length != 24)
             throw new ArgumentException("El array debe tener exactamente 24 elementos.");
 
@@ -51,5 +53,7 @@ public static class CsvGenerator
 
         // El await aquí es solo para mantener la firma asíncrona
         await Task.CompletedTask;
+
+        return LanguageExt.Unit.Default;
     }
 }

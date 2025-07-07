@@ -35,3 +35,4 @@ C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\System.Text.
 C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\ErrorOr.dll
 C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\ErrorOrExtensions.dll
+C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\LanguageExt.Core.dll

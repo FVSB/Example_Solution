@@ -53,6 +53,19 @@
           "lib/netstandard2.0/ErrorOrExtensions.dll": {}
         }
       },
+      "LanguageExt.Core/5.0.0-beta-54": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/LanguageExt.Core.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/LanguageExt.Core.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.Extensions.Configuration/10.0.0-preview.5.25277.114": {
         "type": "package",
         "dependencies": {
@@ -378,6 +391,21 @@
         "erroror.extensions.1.3.0.nupkg.sha512",
         "erroror.extensions.nuspec",
         "lib/netstandard2.0/ErrorOrExtensions.dll"
+      ]
+    },
+    "LanguageExt.Core/5.0.0-beta-54": {
+      "sha512": "hjEB7AbVt5fhjXDHalBwW+gz6cw2PfLT6R20NMUkEnt6Yii74Hdp7TBHjAcLkYNgsrKikk+wuyRTDB426kKmLg==",
+      "type": "package",
+      "path": "languageext.core/5.0.0-beta-54",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.nuget.md",
+        "lang-ext-small.png",
+        "languageext.core.5.0.0-beta-54.nupkg.sha512",
+        "languageext.core.nuspec",
+        "lib/net8.0/LanguageExt.Core.dll",
+        "lib/net8.0/LanguageExt.Core.xml"
       ]
     },
     "Microsoft.Extensions.Configuration/10.0.0-preview.5.25277.114": {
@@ -840,6 +868,7 @@
       "CommandLineParser >= 2.9.1",
       "CsvHelper >= 33.1.0",
       "ErrorOr.Extensions >= 1.3.0",
+      "LanguageExt.Core >= 5.0.0-beta-54",
       "Microsoft.Extensions.Configuration >= 10.0.0-preview.5.25277.114",
       "Microsoft.Extensions.Configuration.Binder >= 10.0.0-preview.5.25277.114",
       "Microsoft.Extensions.Configuration.FileExtensions >= 10.0.0-preview.5.25277.114",
@@ -909,6 +938,10 @@
           "ErrorOr.Extensions": {
             "target": "Package",
             "version": "[1.3.0, )"
+          },
+          "LanguageExt.Core": {
+            "target": "Package",
+            "version": "[5.0.0-beta-54, )"
           },
           "Microsoft.Extensions.Configuration": {
             "target": "Package",

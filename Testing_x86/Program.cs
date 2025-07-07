@@ -6,6 +6,8 @@ using Axpo;
 using CommandLine;
 using static Axpo.PowerService; // Cambia esto al namespace real de PowerService.dll
 using System.Reflection;
+using ErrorOr;
+using LanguageExt;
 
 namespace PowerPositionCalculator;
 
@@ -13,34 +15,66 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        var opts = Parser.LoadSettings(args);
+        var cts = new CancellationTokenSource();
+        CancellationToken ct = cts.Token;
 
-
-        Console.WriteLine($"The walker execute every {opts.TimeMinutes} to the folder {opts.CsvFolderPath}");
-        var minutesTime = opts.TimeMinutes;
-        var date = opts.Time;
-        var csvPath = opts.CsvFolderPath;
-
-        do
+        Console.CancelKeyPress += (sender, eventArgs) =>
         {
-            var now = Utils.get_london_time();
-            date = date.AddMinutes(minutesTime);
-            var solution = await Utils.RetryAsync<DateTime, double[]>(Calculate.Worker, date, 10, 2000,
-                typeof(Axpo.PowerServiceException));
-            //var solution=await Calculate.Worker(date);
-            if (solution.IsError)
+            Console.WriteLine("Cancelling...");
+            cts.Cancel();
+            eventArgs.Cancel = true;
+        };
+        try
+        {
+            var opts = Parser.LoadSettings(args,ct);
+
+
+            Console.WriteLine($"The walker execute every {opts.TimeMinutes} to the folder {opts.CsvFolderPath}");
+            var minutesTime = opts.TimeMinutes;
+            var date = opts.Time;
+            var csvPath = opts.CsvFolderPath;
+
+            do
             {
-                Console.WriteLine("No se logro");
-                return;
-            }
+                _ = Task.Run(async Task<LanguageExt.Unit> () =>
+                {
+                    ct.ThrowIfCancellationRequested();
 
-            await CsvGenerator.CrearCsvPowerPositionAsync(solution.Value, csvPath, now);
+                    var now = Utils.get_london_time();
+                    date = date.AddMinutes(minutesTime);
 
-            System.Console.WriteLine($"Executed the walker in time {now}");
+                    ct.ThrowIfCancellationRequested();
+                    var solution = await Utils.RetryAsync<double[]>(Calculate.CalculateVolumenTradesAsync,
+                        new object[] { date }, 10, ct,2000,
+                        new Type[]{
+                        typeof(Axpo.PowerServiceException)
+                    });
 
-            await Task.Delay(TimeSpan.FromMinutes(minutesTime));
+                    ct.ThrowIfCancellationRequested();
+                    if (solution.IsError)
+                    {
+                        //TODO: Make the error MSG
+                        Console.WriteLine("Error");
+                    }
 
-            Console.WriteLine($"Ëxecuted the walker in time {now}");
-        } while (true);
+                    ct.ThrowIfCancellationRequested();
+                    await Utils.RetryAsync<LanguageExt.Unit>(CsvGenerator.CrearCsvPowerPositionAsync,
+                        new object[] { solution.Value, csvPath, now }, 10, ct,2000,new Type[]{typeof(Exception)});
+
+                    ct.ThrowIfCancellationRequested();
+                    System.Console.WriteLine($"Executed the walker in time {now}");
+                    return LanguageExt.Unit.Default;
+                });
+
+
+                await Task.Delay(TimeSpan.FromMinutes(minutesTime),ct);
+            } while (true);
+        }
+        catch (OperationCanceledException)
+        {
+
+            Console.WriteLine("Operation canceled by the user.");
+        }
+
     }
 }

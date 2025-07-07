@@ -1,4 +1,5 @@
 ﻿namespace PowerPositionCalculator;
+
 using ErrorOr;
 using System;
 using System.Collections.Generic;
@@ -20,59 +21,62 @@ public static class Utils
         return londonNow;
     }
 
-
-    public static async Task<ErrorOr<TResult>> RetryAsync<TInput, TResult>(
-        Func<TInput, Task<TResult>> action,
-        TInput input,
+    public static async Task<ErrorOr<TResult>> RetryAsync<TResult>(
+        Delegate action,
+        object[] args,
         int maxAttempts,
+         CancellationToken ct,
         int delayMilliseconds = 0,
         params Type[] retryOnExceptions)
     {
         List<Error> errores = new();
 
+        ct.ThrowIfCancellationRequested();
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
             try
             {
-                TResult resultado = await action(input);
-                return resultado;
+                // Invoca el método usando reflection
+                ct.ThrowIfCancellationRequested();
+                var result = action.DynamicInvoke(args);
+
+                // Si el método es async, el resultado será un Task<TResult>
+                ct.ThrowIfCancellationRequested();
+                if (result is Task<TResult> task)
+                {
+                    TResult resultado = await task;
+
+
+                    return resultado;
+                }
+                    return (TResult)result;
+
             }
+            catch (OperationCanceledException ex)
+            {
+                throw;
+            }
+
             catch (Exception ex)
             {
-                Console.WriteLine($"Hubo {attempt} errores");
-                bool esReintentable = false;
-                foreach (var tipo in retryOnExceptions)
+                ct.ThrowIfCancellationRequested();
+                if (retryOnExceptions.Any(t => t.IsInstanceOfType(ex)))
                 {
-                    if (tipo.IsInstanceOfType(ex))
-                    {
-                        esReintentable = true;
-                        break;
-                    }
-                }
-
-                errores.Add(Error.Unexpected(
-                    code: $"RetryAttempt{attempt}",
-                    description: $"{ex.GetType().Name}: {ex.Message}"));
-
-                if (esReintentable && attempt < maxAttempts)
-                {
+                    errores.Add(Error.Unexpected(
+                        code: $"RetryAttempt{attempt}",
+                        description: $"{ex.GetType().Name}: {ex.Message}"));
                     if (delayMilliseconds > 0)
-                        await Task.Delay(delayMilliseconds);
-                    continue; // Reintenta
+                        await Task.Delay(delayMilliseconds,ct);
                 }
                 else
                 {
-                    // No es una excepción reintentable o es el último intento
-                    return errores;
+                    // Si no, lanza la excepción
+                    throw;
                 }
             }
         }
 
-        // Si todos los intentos fallan con excepciones reintentables
+        // Si se agotaron los intentos, retorna el error
         return errores;
     }
-
-
-
 }
-

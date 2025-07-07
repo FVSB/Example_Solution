@@ -22,17 +22,21 @@ internal class Options
 
 internal static class Parser
 {
-    internal static Options LoadSettings(string[] args)
+    internal static Options LoadSettings(string[] args, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (args is [_, ..]) return CommandLine.Parser.Default.ParseArguments<Options>(args).Value;
 
-        // 1. Crear el builder y agregar el archivo JSON
+        cancellationToken.ThrowIfCancellationRequested();
+        
         IConfiguration config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory()) // Directorio base
             .AddJsonFile("appsettings.json", optional: true) // Archivo de configuración
             .Build();
 
-
+        cancellationToken.ThrowIfCancellationRequested();
+        
         var section = config.GetSection("options");
         if (section.Exists()) return section.Get<Options>() ?? throw new Exception();
 
