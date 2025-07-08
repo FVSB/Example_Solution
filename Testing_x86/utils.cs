@@ -1,99 +1,151 @@
-﻿namespace PowerPositionCalculator;
-
-using ErrorOr;
+﻿using ErrorOr;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Serilog;
 
-public static class Utils
-{
-    public static DateTime get_london_time()
+namespace PowerPositionCalculator;
+
+
+
+    /// <summary>
+    /// Utility class providing helper methods for date-time operations and retry logic.
+    /// </summary>
+    public static class Utils
     {
-        // Obtén el objeto de zona horaria para Londres
-        TimeZoneInfo londonTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
-
-        // Obtén la hora UTC actual
-        DateTime utcNow = DateTime.UtcNow;
-
-        // Convierte la hora UTC a hora de Londres
-        DateTime londonNow = TimeZoneInfo.ConvertTimeFromUtc(utcNow, londonTimeZone);
-
-        return londonNow;
-    }
-
-    public static async Task<ErrorOr<TResult>> RetryAsync<TResult>(
-    Delegate action,
-    object[] args,
-    int maxAttempts,
-    CancellationToken ct,
-    int delayMilliseconds = 0,
-    params Type[] retryOnExceptions)
-{
-    List<Error> errors = new();
-    ct.ThrowIfCancellationRequested();
-    for (int attempt = 1; attempt <= maxAttempts; attempt++)
-    {
-
-        try
-        { ct.ThrowIfCancellationRequested();
-            // Invoca el método usando reflection
-            var result = action.DynamicInvoke(args);
-
-            // Si el método es async, el resultado será un Task<TResult>
-            if (result is Task<TResult> task)
+        private static readonly ILogger _logger = Log.ForContext(typeof(Utils));
+        
+        /// <summary>
+        /// Gets the current date and time in the London timezone.
+        /// </summary>
+        /// <returns>The current DateTime in the Europe/London timezone.</returns>
+        public static DateTime GetLondonTime()
+        {
+            try
             {
-                TResult resultado = await task;
-                return resultado;
+                // Get timezone info for London
+                TimeZoneInfo londonTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
+
+                // Get the current UTC time
+                DateTime utcNow = DateTime.UtcNow;
+
+                // Convert UTC time to London time
+                DateTime londonNow = TimeZoneInfo.ConvertTimeFromUtc(utcNow, londonTimeZone);
+
+                _logger?.Debug("Retrieved current London time: {LondonNow}", londonNow);
+                return londonNow;
             }
-            else if (result is TResult directResult)
+            catch (TimeZoneNotFoundException ex)
             {
-                // Si no es async, simplemente retorna el resultado
-                return directResult;
+                _logger?.Error(ex, "London timezone not found on this system.");
+                throw;
             }
-            else
+            catch (InvalidTimeZoneException ex)
             {
-                errors.Add(Error.Failure("InvalidOperationException", "The result is not of the expected type."));
-                return errors;
+                _logger?.Error(ex, "London timezone data is invalid.");
+                throw;
             }
         }
-        catch (OperationCanceledException)
+
+        /// <summary>
+        /// Executes the specified delegate with retry logic for transient errors.
+        /// </summary>
+        /// <typeparam name="TResult">The return type of the delegate.</typeparam>
+        /// <param name="action">The delegate to invoke.</param>
+        /// <param name="args">Arguments to pass to the delegate.</param>
+        /// <param name="maxAttempts">Maximum number of retry attempts.</param>
+        /// <param name="ct">CancellationToken for cooperative cancellation.</param>
+        /// <param name="delayMilliseconds">Delay in milliseconds between retries (optional).</param>
+        /// <param name="retryOnExceptions">Exception types that trigger a retry.</param>
+        /// <returns>An ErrorOr containing the result or a list of errors if all retries fail.</returns>
+        public static async Task<ErrorOr<TResult>> RetryAsync<TResult>(
+            Delegate action,
+            object[] args,
+            int maxAttempts,
+            CancellationToken ct,
+            int delayMilliseconds = 0,
+            params Type[] retryOnExceptions)
         {
-            throw;
-        }
-        catch (Exception ex)
-        {
+            var errors = new List<Error>();
             ct.ThrowIfCancellationRequested();
-            //TODO: TO the logger
 
-            bool canRetry = false;
-            foreach (var type in retryOnExceptions)
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                // Considera también InnerException (por DynamicInvoke)
-                if (type.IsInstanceOfType(ex) ||
-                    (ex.InnerException != null && type.IsInstanceOfType(ex.InnerException)))
+                try
                 {
+                    ct.ThrowIfCancellationRequested();
+                    _logger?.Debug("Attempt {Attempt} of {MaxAttempts} for action {Action}.", attempt, maxAttempts, action.Method.Name);
 
-                    canRetry = true;
-                    break;
+                    // Invoke the delegate using reflection
+                    var result = action.DynamicInvoke(args);
+
+                    if (result is Task<TResult> taskResult)
+                    {
+                        // Await the async result
+                        TResult awaitedResult = await taskResult;
+                        _logger?.Information("Action {Action} succeeded on attempt {Attempt}.", action.Method.Name, attempt);
+                        return awaitedResult;
+                    }
+                    else if (result is TResult directResult)
+                    {
+                        // Return direct result if not async
+                        _logger?.Information("Action {Action} succeeded on attempt {Attempt}.", action.Method.Name, attempt);
+                        return directResult;
+                    }
+                    else
+                    {
+                        var error = Error.Failure("InvalidOperationException", "Result is not of the expected type.");
+                        errors.Add(error);
+                        _logger?.Error("Action {Action} returned an unexpected result type on attempt {Attempt}.", action.Method.Name, attempt);
+                        return errors;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger?.Warning("Operation was cancelled during attempt {Attempt} of {Action}.", attempt, action.Method.Name);
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    ct.ThrowIfCancellationRequested();
+
+                    // Check if the exception is one of the retryable types
+                    bool canRetry = false;
+                    foreach (var retryType in retryOnExceptions)
+                    {
+                        if (retryType.IsInstanceOfType(ex) || 
+                            (ex.InnerException != null && retryType.IsInstanceOfType(ex.InnerException)))
+                        {
+                            canRetry = true;
+                            break;
+                        }
+                    }
+
+                    var error = Error.Unexpected(
+                        code: $"RetryAttempt{attempt}",
+                        description: $"{ex.GetType().Name}: {ex.Message}");
+                    errors.Add(error);
+
+                    _logger?.Warning(ex, "Attempt {Attempt} failed with {Exception}. Retry eligible: {CanRetry}", 
+                                attempt, ex.GetType().Name, canRetry);
+
+                    if (!canRetry || attempt >= maxAttempts)
+                    {
+                        _logger?.Error("Action {Action} failed after {MaxAttempts} attempts. Returning accumulated errors.", 
+                                  action.Method.Name, maxAttempts);
+                        return errors;
+                    }
+
+                    if (delayMilliseconds > 0)
+                    {
+                        _logger?.Debug("Waiting {Delay} ms before next retry of action {Action}.", delayMilliseconds, action.Method.Name);
+                        await Task.Delay(delayMilliseconds, ct).ConfigureAwait(false);
+                    }
                 }
             }
-            ct.ThrowIfCancellationRequested();
-            errors.Add(Error.Unexpected(
-                code: $"RetryAttempt{attempt}",
-                description: $"{ex.GetType().Name}: {ex.Message}"));
 
-            ct.ThrowIfCancellationRequested();
-            if (!(canRetry && attempt < maxAttempts))
-            {
-                return errors;
-                continue; // Reintenta
-            }
-            if (delayMilliseconds > 0)
-                await Task.Delay(delayMilliseconds,ct);
+            _logger?.Error("Retry logic exhausted for action {Action}. Total errors: {@Errors}", action.Method.Name, errors);
+            return errors;
         }
     }
 
-    return errors;
-}
-
-}

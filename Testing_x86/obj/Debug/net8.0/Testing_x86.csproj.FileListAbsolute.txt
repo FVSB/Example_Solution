@@ -36,3 +36,11 @@ C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\runtimes\bro
 C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\ErrorOr.dll
 C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\ErrorOrExtensions.dll
 C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\LanguageExt.Core.dll
+C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\Elasticsearch.Net.dll
+C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\Serilog.dll
+C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\Serilog.Formatting.Compact.dll
+C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\Serilog.Formatting.Elasticsearch.dll
+C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\Serilog.Sinks.Console.dll
+C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\Serilog.Sinks.Elasticsearch.dll
+C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\Serilog.Sinks.File.dll
+C:\Users\dell\source\repos\Testing_x86\Testing_x86\bin\Debug\net8.0\Serilog.Sinks.PeriodicBatching.dll
