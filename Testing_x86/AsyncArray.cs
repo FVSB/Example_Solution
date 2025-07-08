@@ -56,10 +56,11 @@
         }
 
         // ✅ Métodos asíncronos para lectura/escritura
-        public async Task<T> GetAsync(int index)
+        public async Task<T> GetAsync(int index ,CancellationToken ct)
         {
+            ct.ThrowIfCancellationRequested();
             CheckIndex(index);
-            await _locks[index].WaitAsync();
+            await _locks[index].WaitAsync(ct);
             try
             {
                 return _array[index];
@@ -70,10 +71,10 @@
             }
         }
 
-        public async Task SetAsync(int index, T value)
+        public async Task SetAsync(int index, T value, CancellationToken ct)
         {
             CheckIndex(index);
-            await _locks[index].WaitAsync();
+            await _locks[index].WaitAsync(ct);
             try
             {
                 _array[index] = value;
@@ -85,13 +86,13 @@
         }
 
 
-        public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken ct)
         {
             for (int i = 0; i < _array.Length; i++)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                ct.ThrowIfCancellationRequested();
 
-                await _locks[i].WaitAsync(cancellationToken);
+                await _locks[i].WaitAsync(ct);
                 try
                 {
                     yield return _array[i];
@@ -110,9 +111,9 @@
         }
     }
 
-public class AsyncDoubleArray : AsyncArray<double>
+public class AsyncTradesVolumenCalculator : AsyncArray<double>
 {
-    public AsyncDoubleArray(int length) : base(length)
+    public AsyncTradesVolumenCalculator(int length) : base(length)
     {
     }
 
@@ -121,13 +122,14 @@ public class AsyncDoubleArray : AsyncArray<double>
     /// </summary>
     /// <param name="index">Índice del array.</param>
     /// <param name="value">Valor a sumar.</param>
-    public async Task AddAsync(int index, double value)
+    public async Task AddAsync(int index, double value, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
         // Validamos índice
         CheckIndex(index);
 
         // Bloqueamos el semáforo para este índice
-        await _locks[index].WaitAsync();
+        await _locks[index].WaitAsync(ct);
         try
         {
             _array[index] += value;
@@ -142,13 +144,13 @@ public class AsyncDoubleArray : AsyncArray<double>
     /// Suma un valor a todos los elementos del array de forma segura entre hilos.
     /// </summary>
     /// <param name="value">Valor a sumar.</param>
-    public async Task AddToAllAsync(double value, CancellationToken cancellationToken = default)
+    public async Task AddToAllAsync(double value,CancellationToken ct)
     {
         for (int i = 0; i < Length; i++)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            ct.ThrowIfCancellationRequested();
 
-            await _locks[i].WaitAsync(cancellationToken);
+            await _locks[i].WaitAsync(ct);
             try
             {
                 _array[i] += value;
@@ -164,7 +166,7 @@ public class AsyncDoubleArray : AsyncArray<double>
     {
         lock (this._array)
         {
-            return (double[])this._array.Clone(); // Devuelve una copia segura
+            return (double[])this._array.Clone();
         }
     }
 

@@ -44,7 +44,7 @@ class Program
                     date = date.AddMinutes(minutesTime);
 
                     ct.ThrowIfCancellationRequested();
-                    var solution = await Utils.RetryAsync<double[]>(Calculate.CalculateVolumenTradesAsync,
+                    var solution = await Utils.RetryAsync<double[]>(Calculate.CalculateTradesVolumenAsync,
                         new object[] { date }, 10, ct,2000,
                         new Type[]{
                         typeof(Axpo.PowerServiceException)
@@ -59,7 +59,7 @@ class Program
 
                     ct.ThrowIfCancellationRequested();
                     await Utils.RetryAsync<LanguageExt.Unit>(CsvGenerator.CrearCsvPowerPositionAsync,
-                        new object[] { solution.Value, csvPath, now }, 10, ct,2000,new Type[]{typeof(Exception)});
+                        new object[] { solution.Value, csvPath, now, ct }, 10, ct,2000,new Type[]{typeof(Exception)});
 
                     ct.ThrowIfCancellationRequested();
                     System.Console.WriteLine($"Executed the walker in time {now}");

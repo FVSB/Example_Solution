@@ -22,63 +22,80 @@ public static class Utils
     }
 
     public static async Task<ErrorOr<TResult>> RetryAsync<TResult>(
-        Func<object[], Task<ErrorOr<TResult>>> action,
-        object[] args,
-        int maxAttempts,
-        CancellationToken ct,
-        int delayMilliseconds = 0,
-        params Type[] retryOnExceptions)
+    Delegate action,
+    object[] args,
+    int maxAttempts,
+    CancellationToken ct,
+    int delayMilliseconds = 0,
+    params Type[] retryOnExceptions)
+{
+    List<Error> errors = new();
+    ct.ThrowIfCancellationRequested();
+    for (int attempt = 1; attempt <= maxAttempts; attempt++)
     {
-        List<Error> errors = new();
 
-        ct.ThrowIfCancellationRequested();
-        for (int attempt = 1; attempt <= maxAttempts; attempt++)
-        {
-            try
+        try
+        { ct.ThrowIfCancellationRequested();
+            // Invoca el método usando reflection
+            var result = action.DynamicInvoke(args);
+
+            // Si el método es async, el resultado será un Task<TResult>
+            if (result is Task<TResult> task)
             {
-                // Invoca el método usando reflection
-                ct.ThrowIfCancellationRequested();
-                var result = action.DynamicInvoke(args);
-                if (result is null)
-                {
-                    errors.Add(Error.Unexpected("null", $"Can't be null, must be Task<ErrOr<{typeof(TResult)}>>"));
-                    return errors;
-                }
-
-                // Si el método es async, el resultado será un Task<TResult>
-                ct.ThrowIfCancellationRequested();
-                if (result is not Task<ErrorOr<TResult>>)
-                {
-                    return Error.Unexpected(description: $"Unexpected {result.GetType()} ");
-                }
-
-                var task = (Task<ErrorOr<TResult>>)result;
-
-                var rErrorOr = await task;
-
-                if (!rErrorOr.IsError) return rErrorOr.Value;
-
-                if (!(rErrorOr.Errors.Any(e => retryOnExceptions.Any(t => t.IsInstanceOfType(e)))))
-                {
-                    return Error.Failure("Fail", $"Fail must of {maxAttempts}");
-                }
-
-                ct.ThrowIfCancellationRequested();
-                errors.Add(Error.Unexpected(
-                    code: $"RetryAttempt{attempt}",
-                    description:
-                    $"{string.Join(", ", rErrorOr.Errors.Select(e => e.GetType().Name))}: {string.Join(", ", rErrorOr.Errors.Select(e => e.Description))}"));
-                if (delayMilliseconds > 0)
-                    await Task.Delay(delayMilliseconds, ct);
+                TResult resultado = await task;
+                return resultado;
             }
-            catch (Exception e)
+            else if (result is TResult directResult)
             {
-                errors.Add(Error.Unexpected($"Exception running RetryAsync {e.GetType()}".ToString(),e.Message));
+                // Si no es async, simplemente retorna el resultado
+                return directResult;
+            }
+            else
+            {
+                errors.Add(Error.Failure("InvalidOperationException", "The result is not of the expected type."));
                 return errors;
             }
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            ct.ThrowIfCancellationRequested();
+            //TODO: TO the logger
+            Console.WriteLine($"Fallll {ex}");
+            bool canRetry = false;
+            foreach (var tipo in retryOnExceptions)
+            {
+                // Considera también InnerException (por DynamicInvoke)
+                if (tipo.IsInstanceOfType(ex) ||
+                    (ex.InnerException != null && tipo.IsInstanceOfType(ex.InnerException)))
+                {
+                    canRetry = true;
+                    break;
+                }
+            }
+            ct.ThrowIfCancellationRequested();
+            errors.Add(Error.Unexpected(
+                code: $"RetryAttempt{attempt}",
+                description: $"{ex.GetType().Name}: {ex.Message}"));
 
-
-        return errors;
+            ct.ThrowIfCancellationRequested();
+            if (canRetry && attempt < maxAttempts)
+            {
+                if (delayMilliseconds > 0)
+                    await Task.Delay(delayMilliseconds);
+                continue; // Reintenta
+            }
+            else
+            {
+                return errors;
+            }
+        }
     }
+
+    return errors;
+}
+
 }

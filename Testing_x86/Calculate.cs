@@ -4,27 +4,28 @@ namespace PowerPositionCalculator;
 
 internal static class Calculate
 {
-    internal static async Task<double[]> CalculateVolumenTradesAsync(DateTime date)
+    internal static async Task<double[]> CalculateTradesVolumenAsync(DateTime date, CancellationToken ct)
     {
         var service = new PowerService();
 
+        ct.ThrowIfCancellationRequested();
         var trades = await service.GetTradesAsync(date);
+        ct.ThrowIfCancellationRequested();
+        var asyncCalculator = new AsyncTradesVolumenCalculator(24);
 
-        var asyncArray = new AsyncDoubleArray(24);
-
-        var options = new ParallelOptions { MaxDegreeOfParallelism = 10 };
+        var options = new ParallelOptions { MaxDegreeOfParallelism = 10,CancellationToken = ct};
 
         await Parallel.ForEachAsync(trades, options,
-            async (trade, ct) => { await AddTradeVolumesAsyncHandle(asyncArray, trade); });
+            async (trade, ct) => { await AddTradeVolumesAsyncHandle(asyncCalculator, trade, ct); });
 
-        return asyncArray.GetArray();
+        return asyncCalculator.GetArray();
     }
 
-    private static async Task AddTradeVolumesAsyncHandle(AsyncDoubleArray asyncArray, PowerTrade trade)
+    private static async Task AddTradeVolumesAsyncHandle(AsyncTradesVolumenCalculator asyncCalculator, PowerTrade trade, CancellationToken ct)
     {
         foreach (var tradePeriods in trade.Periods)
         {
-            await asyncArray.AddAsync(tradePeriods.Period - 1, tradePeriods.Volume);
+            await asyncCalculator.AddAsync(tradePeriods.Period - 1, tradePeriods.Volume,ct);
         }
     }
 }
