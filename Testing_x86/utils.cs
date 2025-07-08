@@ -64,14 +64,15 @@ public static class Utils
         {
             ct.ThrowIfCancellationRequested();
             //TODO: TO the logger
-            Console.WriteLine($"Fallll {ex}");
+
             bool canRetry = false;
-            foreach (var tipo in retryOnExceptions)
+            foreach (var type in retryOnExceptions)
             {
                 // Considera también InnerException (por DynamicInvoke)
-                if (tipo.IsInstanceOfType(ex) ||
-                    (ex.InnerException != null && tipo.IsInstanceOfType(ex.InnerException)))
+                if (type.IsInstanceOfType(ex) ||
+                    (ex.InnerException != null && type.IsInstanceOfType(ex.InnerException)))
                 {
+
                     canRetry = true;
                     break;
                 }
@@ -82,16 +83,13 @@ public static class Utils
                 description: $"{ex.GetType().Name}: {ex.Message}"));
 
             ct.ThrowIfCancellationRequested();
-            if (canRetry && attempt < maxAttempts)
-            {
-                if (delayMilliseconds > 0)
-                    await Task.Delay(delayMilliseconds);
-                continue; // Reintenta
-            }
-            else
+            if (!(canRetry && attempt < maxAttempts))
             {
                 return errors;
+                continue; // Reintenta
             }
+            if (delayMilliseconds > 0)
+                await Task.Delay(delayMilliseconds,ct);
         }
     }
 

@@ -65,7 +65,8 @@ class Program
                     ct.ThrowIfCancellationRequested();
                     System.Console.WriteLine($"Executed the walker in time {now}");
                     return LanguageExt.Unit.Default;
-                });
+                },ct);
+
 
 
                 await Task.Delay(TimeSpan.FromMinutes(minutesTime),ct);
