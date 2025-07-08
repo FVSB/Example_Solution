@@ -1,0 +1,72 @@
+# .gitignore for .NET projects
+
+## Build results
+bin/
+obj/
+out/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vsp
+*.pdb
+*.cache
+*.log
+*.vspscc
+*.vssscc
+*.dbmdl
+*.bak
+*.backup
+*.tmp
+*.temp
+*.ide
+*.sdf
+*.sqlite
+*.mdf
+*.ldf
+*.ncb
+*.sbr
+*.scc
+*.vssscc
+*.class
+*.psess
+*.vspx
+*.vsix
+*.docstates
+
+## Rider and VS Code settings
+.idea/
+.vscode/
+
+## NuGet packages
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Publish files
+publish/
+*.Publish.xml
+
+## User-specific files
+*.user
+*.userprefs
+
+## Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+## IIS Express settings
+.vs/
+*.vs/
+
+## Ignore any folder named 'datos' anywhere in the project
+**/datos/
+**/datos/**
+
+# End of .gitignore
