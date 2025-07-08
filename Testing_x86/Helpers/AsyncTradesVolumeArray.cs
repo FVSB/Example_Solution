@@ -10,7 +10,7 @@ namespace PowerPositionCalculator
     /// Represents a thread-safe asynchronous array with per-index locking for concurrent access.
     /// </summary>
     /// <typeparam name="T">The type of elements in the array.</typeparam>
-    public class AsyncArray<T> : IAsyncEnumerable<T>
+    public class AsyncTradesVolumeArray<T> : IAsyncEnumerable<T>
     {
         protected readonly T[] _array;
         protected readonly SemaphoreSlim[] _locks;
@@ -21,11 +21,11 @@ namespace PowerPositionCalculator
         public int Length => _array.Length;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AsyncArray{T}"/> class with the specified length.
+        /// Initializes a new instance of the <see cref="AsyncTradesVolumeArray{T}"/> class with the specified length.
         /// </summary>
         /// <param name="length">The size of the array.</param>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="length"/> is less than or equal to zero.</exception>
-        public AsyncArray(int length)
+        public AsyncTradesVolumeArray(int length)
         {
             if (length <= 0)
                 throw new ArgumentOutOfRangeException(nameof(length), "Length must be greater than zero.");
@@ -36,7 +36,7 @@ namespace PowerPositionCalculator
             for (int i = 0; i < length; i++)
                 _locks[i] = new SemaphoreSlim(1, 1);
 
-            Log.Information("Initialized AsyncArray with length {Length}.", length);
+            Log.Information("Initialized AsyncTradesVolumeArray with length {Length}.", length);
         }
 
         /// <summary>
@@ -163,15 +163,15 @@ namespace PowerPositionCalculator
     /// Represents a thread-safe asynchronous array specialized for double values,
     /// supporting additional operations for concurrent numeric calculations.
     /// </summary>
-    public class AsyncTradesVolumenCalculator : AsyncArray<double>
+    public class AsyncTradesVolumeTradesVolumenCalculator : AsyncTradesVolumeArray<double>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="AsyncTradesVolumenCalculator"/> class.
+        /// Initializes a new instance of the <see cref="AsyncTradesVolumeTradesVolumenCalculator"/> class.
         /// </summary>
         /// <param name="length">The size of the array.</param>
-        public AsyncTradesVolumenCalculator(int length) : base(length)
+        public AsyncTradesVolumeTradesVolumenCalculator(int length) : base(length)
         {
-            Log.Debug("Initialized AsyncTradesVolumenCalculator with length {Length}.", length);
+            Log.Debug("Initialized AsyncTradesVolumeTradesVolumenCalculator with length {Length}.", length);
         }
 
         /// <summary>

@@ -38,7 +38,7 @@ class Program
 
         Log.Information("Starting PowerPositionCalculator application.");
         // Load the options from appsettings.json or console
-        var opts_result = Parser.LoadSettings(args, ct);
+        var opts_result = OptionsParser.LoadSettings(args, ct);
         if (opts_result.IsError)
         {
             Log.Fatal("Can't loaded the settings, Error={$Errors}", opts_result.Errors);
@@ -92,7 +92,7 @@ class Program
                 {
                     ct.ThrowIfCancellationRequested();
 
-                    var now = Utils.GetLondonTime();
+                    var now = TimeUtils.GetLondonTime();
                     date = date.AddMinutes(minutesTime);
 
                     Log.Information("Starting trade volume calculation at {Now} for target time {TargetTime}", now,
@@ -101,7 +101,7 @@ class Program
                     try
                     {
                         ct.ThrowIfCancellationRequested();
-                        var solution = await Utils.RetryAsync<double[]>(Calculate.CalculateTradesVolumenAsync,
+                        var solution = await TimeUtils.RetryAsync<double[]>(TradeVolumeCalculator.CalculateTradesVolumenAsync,
                             new object[] { date, ct }, 10, ct, 2000,
                             new Type[] { typeof(Axpo.PowerServiceException) });
 
@@ -115,7 +115,7 @@ class Program
                             Log.Information("Trade volume calculation completed successfully at {Now}", now);
 
                             ct.ThrowIfCancellationRequested();
-                            await Utils.RetryAsync<LanguageExt.Unit>(CsvGenerator.CreatePowerPositionCsvAsync,
+                            await TimeUtils.RetryAsync<LanguageExt.Unit>(CsvGenerator.CreatePowerPositionCsvAsync,
                                 new object[] { solution.Value, csvPath, now, ct }, 10, ct, 2000,
                                 new Type[] { typeof(Exception) });
 

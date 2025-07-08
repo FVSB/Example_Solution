@@ -2,7 +2,7 @@
 
 namespace PowerPositionCalculator;
 
-internal static class Calculate
+internal static class TradeVolumeCalculator
 {
     internal static async Task<double[]> CalculateTradesVolumenAsync(DateTime date, CancellationToken ct)
     {
@@ -11,7 +11,7 @@ internal static class Calculate
         ct.ThrowIfCancellationRequested();
         var trades = await service.GetTradesAsync(date);
         ct.ThrowIfCancellationRequested();
-        var asyncCalculator = new AsyncTradesVolumenCalculator(24);
+        var asyncCalculator = new AsyncTradesVolumeTradesVolumenCalculator(24);
 
         var options = new ParallelOptions { MaxDegreeOfParallelism = 10,CancellationToken = ct};
 
@@ -21,7 +21,7 @@ internal static class Calculate
         return asyncCalculator.GetArray();
     }
 
-    private static async Task AddTradeVolumesAsyncHandle(AsyncTradesVolumenCalculator asyncCalculator, PowerTrade trade, CancellationToken ct)
+    private static async Task AddTradeVolumesAsyncHandle(AsyncTradesVolumeTradesVolumenCalculator asyncCalculator, PowerTrade trade, CancellationToken ct)
     {
         foreach (var tradePeriods in trade.Periods)
         {

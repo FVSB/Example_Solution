@@ -31,15 +31,15 @@ internal class Options
     /// Gets or sets the date and time to start the extraction process. Defaults to current London time.
     /// </summary>
     [Option('d', "date", Required = false, HelpText = "Optional date and time to start the extraction.")]
-    public required DateTime Time { get; set; } = Utils.GetLondonTime();
+    public required DateTime Time { get; set; } = TimeUtils.GetLondonTime();
 }
 
 /// <summary>
 /// Provides functionality to load application settings either from command-line arguments or from a configuration file.
 /// </summary>
-internal static class Parser
+internal static class OptionsParser
 {
-    private static readonly ILogger _logger = Log.ForContext(typeof(Parser));
+    private static readonly ILogger _logger = Log.ForContext(typeof(OptionsParser));
 
     /// <summary>
     /// Loads the application settings from command-line arguments or appsettings.json as a fallback.
