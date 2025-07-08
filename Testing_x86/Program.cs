@@ -45,7 +45,7 @@ class Program
 
                     ct.ThrowIfCancellationRequested();
                     var solution = await Utils.RetryAsync<double[]>(Calculate.CalculateTradesVolumenAsync,
-                        new object[] { date }, 10, ct,2000,
+                        new object[] { date,ct }, 10, ct,2000,
                         new Type[]{
                         typeof(Axpo.PowerServiceException)
                     });
@@ -56,6 +56,7 @@ class Program
                         //TODO: Make the error MSG
                         Console.WriteLine("Error");
                     }
+
 
                     ct.ThrowIfCancellationRequested();
                     await Utils.RetryAsync<LanguageExt.Unit>(CsvGenerator.CrearCsvPowerPositionAsync,

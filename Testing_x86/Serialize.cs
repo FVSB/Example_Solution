@@ -23,7 +23,7 @@ public static class CsvGenerator
     {
         ct.ThrowIfCancellationRequested();
         if (volumes == null || volumes.Length != 24)
-            throw new ArgumentException("El array debe tener exactamente 24 elementos.");
+            throw new ArgumentException( $"El array debe tener exactamente 24 elementos. Volumenles {volumes}");
 
 
         string fileName = $"PowerPosition_{dateTime:yyyyMMdd}_{dateTime:HHmm}.csv";
