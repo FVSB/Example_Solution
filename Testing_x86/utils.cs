@@ -22,14 +22,14 @@ public static class Utils
     }
 
     public static async Task<ErrorOr<TResult>> RetryAsync<TResult>(
-        Delegate action,
+        Func<object[], Task<ErrorOr<TResult>>> action,
         object[] args,
         int maxAttempts,
-         CancellationToken ct,
+        CancellationToken ct,
         int delayMilliseconds = 0,
         params Type[] retryOnExceptions)
     {
-        List<Error> errores = new();
+        List<Error> errors = new();
 
         ct.ThrowIfCancellationRequested();
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
@@ -39,44 +39,46 @@ public static class Utils
                 // Invoca el método usando reflection
                 ct.ThrowIfCancellationRequested();
                 var result = action.DynamicInvoke(args);
+                if (result is null)
+                {
+                    errors.Add(Error.Unexpected("null", $"Can't be null, must be Task<ErrOr<{typeof(TResult)}>>"));
+                    return errors;
+                }
 
                 // Si el método es async, el resultado será un Task<TResult>
                 ct.ThrowIfCancellationRequested();
-                if (result is Task<TResult> task)
+                if (result is not Task<ErrorOr<TResult>>)
                 {
-                    TResult resultado = await task;
-
-
-                    return resultado;
+                    return Error.Unexpected(description: $"Unexpected {result.GetType()} ");
                 }
-                    return (TResult)result;
 
-            }
-            catch (OperationCanceledException ex)
-            {
-                throw;
-            }
+                var task = (Task<ErrorOr<TResult>>)result;
 
-            catch (Exception ex)
-            {
+                var rErrorOr = await task;
+
+                if (!rErrorOr.IsError) return rErrorOr.Value;
+
+                if (!(rErrorOr.Errors.Any(e => retryOnExceptions.Any(t => t.IsInstanceOfType(e)))))
+                {
+                    return Error.Failure("Fail", $"Fail must of {maxAttempts}");
+                }
+
                 ct.ThrowIfCancellationRequested();
-                if (retryOnExceptions.Any(t => t.IsInstanceOfType(ex)))
-                {
-                    errores.Add(Error.Unexpected(
-                        code: $"RetryAttempt{attempt}",
-                        description: $"{ex.GetType().Name}: {ex.Message}"));
-                    if (delayMilliseconds > 0)
-                        await Task.Delay(delayMilliseconds,ct);
-                }
-                else
-                {
-                    // Si no, lanza la excepción
-                    throw;
-                }
+                errors.Add(Error.Unexpected(
+                    code: $"RetryAttempt{attempt}",
+                    description:
+                    $"{string.Join(", ", rErrorOr.Errors.Select(e => e.GetType().Name))}: {string.Join(", ", rErrorOr.Errors.Select(e => e.Description))}"));
+                if (delayMilliseconds > 0)
+                    await Task.Delay(delayMilliseconds, ct);
+            }
+            catch (Exception e)
+            {
+                errors.Add(Error.Unexpected($"Exception running RetryAsync {e.GetType()}".ToString(),e.Message));
+                return errors;
             }
         }
 
-        // Si se agotaron los intentos, retorna el error
-        return errores;
+
+        return errors;
     }
 }
