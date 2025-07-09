@@ -4,6 +4,7 @@ namespace PowerPositionCalculator;
 
 internal static class TradeVolumeCalculator
 {
+    
     internal static async Task<double[]> CalculateTradesVolumenAsync(DateTime date, CancellationToken ct)
     {
         var service = new PowerService();
@@ -25,6 +26,7 @@ internal static class TradeVolumeCalculator
     {
         foreach (var tradePeriods in trade.Periods)
         {
+            ct.ThrowIfCancellationRequested();
             await asyncCalculator.AddAsync(tradePeriods.Period - 1, tradePeriods.Volume,ct);
         }
     }

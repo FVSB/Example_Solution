@@ -11,7 +11,7 @@ namespace PowerPositionCalculator;
     /// <summary>
     /// Utility class providing helper methods for date-time operations and retry logic.
     /// </summary>
-    public static partial class TimeUtils
+    public static  class TimeUtils
     {
         private static readonly ILogger _logger = Log.ForContext(typeof(TimeUtils));
         

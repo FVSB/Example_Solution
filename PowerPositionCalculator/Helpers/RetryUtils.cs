@@ -6,9 +6,9 @@ using Serilog;
 
 namespace PowerPositionCalculator;
 
-public static partial class TimeUtils
+public static  class RetryUtils
 {
-
+    private static readonly ILogger _logger = Log.ForContext(typeof(RetryUtils));
     /// <summary>
     /// Executes the specified delegate with retry logic for transient errors.
     /// </summary>

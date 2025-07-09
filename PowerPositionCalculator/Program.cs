@@ -8,6 +8,7 @@ using static Axpo.PowerService;
 using System.Reflection;
 using ErrorOr;
 using LanguageExt;
+using Microsoft.VisualBasic.CompilerServices;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 
@@ -43,7 +44,7 @@ class Program
         {
             Log.Fatal("Can't loaded the settings, Error={$Errors}", opts_result.Errors);
             await Log.CloseAndFlushAsync();
-            throw new Exception("Can't loaded the settings");
+            throw new Exception($"Can't loaded the settings {opts_result.Errors.Show()}");
         }
 
         var opts = opts_result.Value;
@@ -60,7 +61,7 @@ class Program
 
         Log.Logger = new LoggerConfiguration()
             .Enrich.FromLogContext()
-            .WriteTo.File("logs.txt")
+            .WriteTo.File($"logs_{TimeUtils.GetLondonTime()}.txt")
             .WriteTo.Console()
             .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri("http://localhost:9200"))
             {
@@ -101,7 +102,7 @@ class Program
                     try
                     {
                         ct.ThrowIfCancellationRequested();
-                        var solution = await TimeUtils.RetryAsync<double[]>(TradeVolumeCalculator.CalculateTradesVolumenAsync,
+                        var solution = await RetryUtils.RetryAsync<double[]>(TradeVolumeCalculator.CalculateTradesVolumenAsync,
                             new object[] { date, ct }, 10, ct, 2000,
                             new Type[] { typeof(Axpo.PowerServiceException) });
 
@@ -115,7 +116,7 @@ class Program
                             Log.Information("Trade volume calculation completed successfully at {Now}", now);
 
                             ct.ThrowIfCancellationRequested();
-                            await TimeUtils.RetryAsync<LanguageExt.Unit>(CsvGenerator.CreatePowerPositionCsvAsync,
+                            await RetryUtils.RetryAsync<LanguageExt.Unit>(CsvGenerator.CreatePowerPositionCsvAsync,
                                 new object[] { solution.Value, csvPath, now, ct }, 10, ct, 2000,
                                 new Type[] { typeof(Exception) });
 
@@ -149,5 +150,7 @@ class Program
             Log.Information("PowerPositionCalculator shutting down.");
             await Log.CloseAndFlushAsync();
         }
+
+        return;
     }
 }

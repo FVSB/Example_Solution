@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<Platform>x86</Platform>
 		<PlatformTarget>x86</PlatformTarget>
+		<RootNamespace>Testing_x86</RootNamespace>
 	</PropertyGroup>
 
   <PropertyGroup>

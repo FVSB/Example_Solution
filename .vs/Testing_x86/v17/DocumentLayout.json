@@ -31,7 +31,7 @@
               "RelativeDocumentMoniker": "Testing_x86\\Program.cs",
               "ToolTip": "C:\\Users\\dell\\source\\repos\\Testing_x86\\Testing_x86\\Program.cs",
               "RelativeToolTip": "Testing_x86\\Program.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAABIAAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-06T13:26:45.195Z",
               "EditorCaption": ""
@@ -39,15 +39,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Testing_x86",
+              "Title": "Testing_x86.csproj",
               "DocumentMoniker": "C:\\Users\\dell\\source\\repos\\Testing_x86\\Testing_x86\\Testing_x86.csproj",
               "RelativeDocumentMoniker": "Testing_x86\\Testing_x86.csproj",
               "ToolTip": "C:\\Users\\dell\\source\\repos\\Testing_x86\\Testing_x86\\Testing_x86.csproj",
               "RelativeToolTip": "Testing_x86\\Testing_x86.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-07-06T13:28:39.742Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-06T13:28:39.742Z"
             },
             {
               "$type": "Document",

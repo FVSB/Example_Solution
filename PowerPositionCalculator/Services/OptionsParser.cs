@@ -72,7 +72,7 @@ internal static class OptionsParser
             if (section.Exists())
             {
                 var options = section.Get<Options>();
-                if (options != null)
+                if (options is not null)
                 {
                     _logger.Information("Settings successfully loaded from appsettings.json.");
                     return options;
@@ -84,6 +84,7 @@ internal static class OptionsParser
             return ErrorOr.Error.Unexpected(
                 code: "LoadSettingsError",
                 description: "Failed to retrieve options from configuration file."
+
             );
 
             return ErrorOr.Error.Unexpected("Unexpedted in Load Settings", "Can't get the options");
