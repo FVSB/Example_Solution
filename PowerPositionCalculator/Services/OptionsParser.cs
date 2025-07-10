@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualBasic.CompilerServices;
+﻿using System.Reflection;
+using Microsoft.VisualBasic.CompilerServices;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Configuration;
 using ErrorOr;
@@ -32,6 +33,76 @@ internal class Options
     /// </summary>
     [Option('d', "date", Required = false, HelpText = "Optional date and time to start the extraction.")]
     public required DateTime Time { get; set; } = TimeUtils.GetLondonTime();
+
+
+    internal ErrorOr<LanguageExt.Unit> OverrideFromArgs(string[] args)
+    {
+        // Tipos que necesitan nueva refefinicion
+        var special_types = new Dictionary<string, Func<string, object>>()
+        {
+            {
+                "Time", (string date) =>
+                {
+                    date = date.Substring(0, 16);
+
+                    if (DateTime.TryParseExact(date, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None,
+                            out DateTime reformat_date)) ;
+                    {
+                        return reformat_date;
+                    }
+                }
+            }
+        };
+
+        var type_ = typeof(Options);
+        var props = type_.GetProperties();
+        foreach (var prop in type_.GetProperties())
+        {
+            var name = prop.Name;
+            var optionAttr = prop.GetCustomAttribute<OptionAttribute>();
+            if (optionAttr is null) throw new Exception();
+            var indexOpt = Array.IndexOf(args, $"-{optionAttr.ShortName}");
+            if (indexOpt < 0)
+            {
+                indexOpt = Array.IndexOf(args, $"--{optionAttr.LongName}");
+
+                if (indexOpt < 0) continue;
+            }
+
+            if (indexOpt + 1 >= args.Length)
+            {
+                ErrorOr.Error.Failure("Prop don't valid", $"The prop {args[indexOpt]} dont have value assinged ");
+            }
+
+
+            var value = args[indexOpt + 1];
+
+            var type = prop.PropertyType.FullName;
+
+            Type tipoDestino = Type.GetType(type) ?? typeof(string);
+
+            PropertyInfo prop_name = typeof(Options).GetProperty(name);
+
+            if (prop_name is null)
+            {
+                ErrorOr.Error.Failure($"The property {name} does not exist", $"The property {name} does not exist");
+            }
+
+
+            if (special_types.ContainsKey(name))
+            {
+                var temp = special_types[name](value);
+                prop_name.SetValue(this, temp);
+                continue;
+            }
+
+            var tt = Convert.ChangeType(value, tipoDestino);
+
+            prop_name.SetValue(this, tt);
+        }
+
+        return LanguageExt.Unit.Default;
+    }
 }
 
 /// <summary>
@@ -62,8 +133,8 @@ internal static class OptionsParser
             _logger.Information("Falling back to appsettings.json configuration.");
 
             IConfiguration config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory()) // Directorio base
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false) // Archivo de configuración
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
                 .Build();
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -77,14 +148,12 @@ internal static class OptionsParser
                     _logger.Information("Settings successfully loaded from appsettings.json.");
                     return options;
                 }
-
             }
 
             _logger.Error("Configuration section 'options' not found or invalid in appsettings.json.");
             return ErrorOr.Error.Unexpected(
                 code: "LoadSettingsError",
                 description: "Failed to retrieve options from configuration file."
-
             );
 
             return ErrorOr.Error.Unexpected("Unexpedted in Load Settings", "Can't get the options");
@@ -102,6 +171,5 @@ internal static class OptionsParser
                 description: ex.Message
             );
         }
-
     }
 }

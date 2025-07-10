@@ -4,6 +4,7 @@
 		<Platform>x86</Platform>
 		<PlatformTarget>x86</PlatformTarget>
 		<RootNamespace>PowerPositionCalculator</RootNamespace>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	</PropertyGroup>
 
   <PropertyGroup>
@@ -36,6 +37,12 @@
 
   <ItemGroup>
     <Folder Include="datos\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\.dockerignore">
+      <Link>.dockerignore</Link>
+    </Content>
   </ItemGroup>
 
 </Project>
