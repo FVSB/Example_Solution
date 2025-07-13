@@ -1,24 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Axpo;
-using CommandLine;
-using static Axpo.PowerService;
-using System.Reflection;
-using ErrorOr;
-using LanguageExt;
-using Microsoft.VisualBasic.CompilerServices;
+﻿
 using Serilog;
-using Serilog.Sinks.Elasticsearch;
-using ErrorType = ErrorOr.ErrorType;
+
 
 
 namespace PowerPositionCalculator;
 
-class Program
+internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         #region Configurations
 
@@ -38,14 +27,23 @@ class Program
 
         #region Logger Config
 
-        var projectRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\"));
-        var logDirectory = Path.Combine(projectRoot, "logs");
+        // var projectRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\"));
+        var projectRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\.."));
+        var logsPathValue = PathUtils.GetRootPath(projectRoot);
+        if (logsPathValue.IsError)
+            throw new Exception($"Exception loading the path of the logs/base {logsPathValue.Errors.Show()}");
+
+        var timeNow = TimeUtils.GetLondonTime();
+        var logDirectory = Path.Combine(logsPathValue.Value, "logs", timeNow.ToString("yyyy-MM-dd"));
 
         if (!Directory.Exists(logDirectory))
             Directory.CreateDirectory(logDirectory);
 
 
-        var logFile = Path.Combine(logDirectory, $"logs_{TimeUtils.GetLondonTime().Minute}_{TimeUtils.GetLondonTime().Second}.txt");
+        var logFile = Path.Combine(logDirectory, $"logs-{timeNow:HH-mm-ss}.txt");
+
+        Log.Information($"The path of the logs  is {logFile}");
+
         Log.Logger = new LoggerConfiguration()
             .Enrich.FromLogContext()
             .WriteTo.File(logFile, buffered: false)
@@ -53,39 +51,34 @@ class Program
             .MinimumLevel.Debug()
             .CreateLogger();
 
-
         #endregion
 
         #region Load Config Options
 
         Log.Information("Starting PowerPositionCalculator application.");
         // Load the options from appsettings.json or console
-        var opts_result = OptionsParser.LoadSettings(args, ct);
+        var optsResult = OptionsParser.LoadSettings(args, ct);
 
 
-
-        if (opts_result.IsError)
+        if (optsResult.IsError)
         {
-            if (opts_result.Errors is [_, ..] && (opts_result.Errors[0].Code == "help_return"))
+            if (optsResult.Errors is [_, ..] && (optsResult.Errors[0].Code == "help_return"))
             {
-               await Log.CloseAndFlushAsync();
-               return;
+                await Log.CloseAndFlushAsync();
+                return;
             }
-            Log.Fatal("Can't loaded the settings, Error={$Errors}", opts_result.Errors);
+
+            Log.Fatal("Can't loaded the settings, Error={$Errors}", optsResult.Errors);
             await Log.CloseAndFlushAsync();
-            throw new Exception($"Can't loaded the settings {opts_result.Errors.Show()}");
+            throw new Exception($"Can't loaded the settings {optsResult.Errors.Show()}");
         }
 
-        var opts = opts_result.Value;
-
-       // Log.Debug("Loaded settings: TimeMinutes={TimeMinutes}, CsvFolderPath={CsvFolderPath}, Time={Time}",
-        //    opts.TimeMinutes, opts.CsvFolderPath, opts.Time);
+        var opts = optsResult.Value;
 
         Log.Information("The walker will execute every {TimeMinutes} minutes in folder: {CsvFolderPath}",
             opts.TimeMinutes, opts.CsvFolderPath);
 
         #endregion
-
 
         #endregion
 
@@ -95,7 +88,8 @@ class Program
             var minutesTime = opts.TimeMinutes;
             var date = opts.Time;
             var csvPath = opts.CsvFolderPath;
-
+            var retryTimes = opts.RetryTimes;
+            var dealyMinutes = opts.DelayMillisecondsInRetryTimes;
             do
             {
                 _ = Task.Run(async Task<LanguageExt.Unit>? () =>
@@ -113,8 +107,8 @@ class Program
                         ct.ThrowIfCancellationRequested();
                         var solution = await RetryUtils.RetryAsync<double[]>(
                             TradeVolumeCalculator.CalculateTradesVolumenAsync,
-                            new object[] { date, ct }, 10, ct, 2000,
-                            new Type[] { typeof(Axpo.PowerServiceException) });
+                            new object[] { date, ct }, retryTimes, ct, dealyMinutes,
+                            new[] { typeof(Axpo.PowerServiceException) });
 
                         if (solution.IsError)
                         {
@@ -127,8 +121,8 @@ class Program
 
                             ct.ThrowIfCancellationRequested();
                             await RetryUtils.RetryAsync<LanguageExt.Unit>(CsvGenerator.CreatePowerPositionCsvAsync,
-                                new object[] { solution.Value, csvPath, now, ct }, 10, ct, 2000,
-                                new Type[] { typeof(Exception) });
+                                new object[] { solution.Value, csvPath, now, ct }, retryTimes, ct, dealyMinutes,
+                                new[] { typeof(Exception) });
 
                             Log.Information("CSV generated successfully at {CsvPath} for time {Now}", csvPath, now);
                         }

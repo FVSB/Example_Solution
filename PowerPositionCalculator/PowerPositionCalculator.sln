@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PowerPositionCalculator", "PowerPositionCalculator.csproj", "{FE9CDE63-2224-41B4-BF85-3D74AF1B13A1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FE9CDE63-2224-41B4-BF85-3D74AF1B13A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE9CDE63-2224-41B4-BF85-3D74AF1B13A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE9CDE63-2224-41B4-BF85-3D74AF1B13A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE9CDE63-2224-41B4-BF85-3D74AF1B13A1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {37EED2B2-178B-40F8-B447-BAF74A30BD94}
+	EndGlobalSection
+EndGlobal

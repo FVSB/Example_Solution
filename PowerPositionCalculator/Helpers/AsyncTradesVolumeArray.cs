@@ -12,13 +12,13 @@ namespace PowerPositionCalculator
     /// <typeparam name="T">The type of elements in the array.</typeparam>
     public class AsyncTradesVolumeArray<T> : IAsyncEnumerable<T>
     {
-        protected readonly T[] _array;
-        protected readonly SemaphoreSlim[] _locks;
+        protected readonly T[] Array;
+        protected readonly SemaphoreSlim[] Locks;
 
         /// <summary>
         /// Gets the length of the array.
         /// </summary>
-        public int Length => _array.Length;
+        public int Length => Array.Length;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AsyncTradesVolumeArray{T}"/> class with the specified length.
@@ -30,11 +30,11 @@ namespace PowerPositionCalculator
             if (length <= 0)
                 throw new ArgumentOutOfRangeException(nameof(length), "Length must be greater than zero.");
 
-            _array = new T[length];
-            _locks = new SemaphoreSlim[length];
+            Array = new T[length];
+            Locks = new SemaphoreSlim[length];
 
             for (int i = 0; i < length; i++)
-                _locks[i] = new SemaphoreSlim(1, 1);
+                Locks[i] = new SemaphoreSlim(1, 1);
 
             Log.Information("Initialized AsyncTradesVolumeArray with length {Length}.", length);
         }
@@ -49,14 +49,14 @@ namespace PowerPositionCalculator
             {
                 CheckIndex(index);
                 Log.Debug("Synchronous get on index {Index}.", index);
-                _locks[index].Wait();
+                Locks[index].Wait();
                 try
                 {
-                    return _array[index];
+                    return Array[index];
                 }
                 finally
                 {
-                    _locks[index].Release();
+                    Locks[index].Release();
                     Log.Debug("Released lock after synchronous get on index {Index}.", index);
                 }
             }
@@ -64,14 +64,14 @@ namespace PowerPositionCalculator
             {
                 CheckIndex(index);
                 Log.Debug("Synchronous set on index {Index} with value {Value}.", index, value);
-                _locks[index].Wait();
+                Locks[index].Wait();
                 try
                 {
-                    _array[index] = value;
+                    Array[index] = value;
                 }
                 finally
                 {
-                    _locks[index].Release();
+                    Locks[index].Release();
                     Log.Debug("Released lock after synchronous set on index {Index}.", index);
                 }
             }
@@ -88,14 +88,14 @@ namespace PowerPositionCalculator
             ct.ThrowIfCancellationRequested();
             CheckIndex(index);
             Log.Debug("Async get on index {Index}.", index);
-            await _locks[index].WaitAsync(ct);
+            await Locks[index].WaitAsync(ct);
             try
             {
-                return _array[index];
+                return Array[index];
             }
             finally
             {
-                _locks[index].Release();
+                Locks[index].Release();
                 Log.Debug("Released lock after async get on index {Index}.", index);
             }
         }
@@ -111,14 +111,14 @@ namespace PowerPositionCalculator
             ct.ThrowIfCancellationRequested();
             CheckIndex(index);
             Log.Debug("Async set on index {Index} with value {Value}.", index, value);
-            await _locks[index].WaitAsync(ct);
+            await Locks[index].WaitAsync(ct);
             try
             {
-                _array[index] = value;
+                Array[index] = value;
             }
             finally
             {
-                _locks[index].Release();
+                Locks[index].Release();
                 Log.Debug("Released lock after async set on index {Index}.", index);
             }
         }
@@ -126,19 +126,19 @@ namespace PowerPositionCalculator
         /// <inheritdoc />
         public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken ct)
         {
-            for (int i = 0; i < _array.Length; i++)
+            for (int i = 0; i < Array.Length; i++)
             {
                 ct.ThrowIfCancellationRequested();
                 Log.Debug("Async enumerator accessing index {Index}.", i);
 
-                await _locks[i].WaitAsync(ct);
+                await Locks[i].WaitAsync(ct);
                 try
                 {
-                    yield return _array[i];
+                    yield return Array[i];
                 }
                 finally
                 {
-                    _locks[i].Release();
+                    Locks[i].Release();
                     Log.Debug("Released lock after enumerator access on index {Index}.", i);
                 }
             }
@@ -151,9 +151,9 @@ namespace PowerPositionCalculator
         /// <exception cref="IndexOutOfRangeException">Thrown if <paramref name="index"/> is out of range.</exception>
         protected void CheckIndex(int index)
         {
-            if (index < 0 || index >= _array.Length)
+            if (index < 0 || index >= Array.Length)
             {
-                Log.Error("Index {Index} is out of range for array length {Length}.", index, _array.Length);
+                Log.Error("Index {Index} is out of range for array length {Length}.", index, Array.Length);
                 throw new IndexOutOfRangeException($"Index {index} is out of range.");
             }
         }
@@ -185,14 +185,14 @@ namespace PowerPositionCalculator
             ct.ThrowIfCancellationRequested();
             CheckIndex(index);
             Log.Debug("Async add on index {Index} with increment {Value}.", index, value);
-            await _locks[index].WaitAsync(ct);
+            await Locks[index].WaitAsync(ct);
             try
             {
-                _array[index] += value;
+                Array[index] += value;
             }
             finally
             {
-                _locks[index].Release();
+                Locks[index].Release();
                 Log.Debug("Released lock after async add on index {Index}.", index);
             }
         }
@@ -208,14 +208,14 @@ namespace PowerPositionCalculator
             for (int i = 0; i < Length; i++)
             {
                 ct.ThrowIfCancellationRequested();
-                await _locks[i].WaitAsync(ct);
+                await Locks[i].WaitAsync(ct);
                 try
                 {
-                    _array[i] += value;
+                    Array[i] += value;
                 }
                 finally
                 {
-                    _locks[i].Release();
+                    Locks[i].Release();
                     Log.Debug("Released lock after async add on index {Index}.", i);
                 }
             }
@@ -227,10 +227,10 @@ namespace PowerPositionCalculator
         /// <returns>A clone of the array.</returns>
         public double[] GetArray()
         {
-            lock (_array)
+            lock (Array)
             {
                 Log.Debug("Cloning the internal array.");
-                return (double[])_array.Clone();
+                return (double[])Array.Clone();
             }
         }
     }

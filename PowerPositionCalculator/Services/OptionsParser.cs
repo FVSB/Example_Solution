@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using Microsoft.VisualBasic.CompilerServices;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +35,20 @@ internal class Options
     [Option('d', "date", Required = false, HelpText = "Optional date and time to start the extraction.")]
     public required DateTime Time { get; set; } = TimeUtils.GetLondonTime();
 
+    /// <summary>
+    /// Gets or sets the number of retry attempts for failed operations.
+    /// </summary>
+    [Option('r', "retry_times", Required = false, Default = 10,
+        HelpText = "Number of retry attempts for failed operations.")]
+    public required int RetryTimes { get; set; }
+
+    /// <summary>
+    /// Gets or sets the delay in milliseconds between retry attempts.
+    /// </summary>
+    [Option('m', "delay_milliseconds", Required = false, Default = 2000,
+        HelpText = "Delay in milliseconds between retry attempts.")]
+    public required int DelayMillisecondsInRetryTimes { get; set; }
+
 
     /// <summary>
     /// Overrides properties in the Options class using command-line arguments.
@@ -47,7 +62,6 @@ internal class Options
     {
         try
         {
-            // Tipos que necesitan nueva refefinicion
             var specialTypes = new Dictionary<string, Func<string, ErrorOr<object>>>()
             {
                 {
@@ -202,7 +216,9 @@ internal class Options
 /// </summary>
 internal static class OptionsParser
 {
-    private static readonly ILogger _logger = Log.ForContext(typeof(OptionsParser));
+    private static readonly ILogger Logger = Log.ForContext(typeof(OptionsParser));
+
+
 
     /// <summary>
     /// Loads the application settings from command-line arguments or appsettings.json as a fallback.
@@ -214,7 +230,7 @@ internal static class OptionsParser
     {
         try
         {
-            _logger.Information("Starting to load application settings...");
+            Logger.Information("Starting to load application settings...");
             cancellationToken.ThrowIfCancellationRequested();
 
 
@@ -228,15 +244,21 @@ internal static class OptionsParser
 
                 var parser = new Parser(with => with.HelpWriter = Console.Out);
                 parser.ParseArguments<Options>(new[] { "--help" });
-                return ErrorOr.Error.Custom(6,"help_return","");
+                return ErrorOr.Error.Custom(6, "help_return", "");
             }
 
 
             // Fallback to appsettings.json
-            _logger.Information("Falling back to appsettings.json configuration.");
-
+            Logger.Information("Falling back to appsettings.json configuration.");
+            var basePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\.."));
+            Logger.Information($"The path of the appsettings is {basePath}");
+            var settingsPathValue = PathUtils.GetRootPath(basePath);
+            if (settingsPathValue.IsError)
+                return ErrorOr.Error.Failure($"Error gettings settings path: {settingsPathValue.Errors.Show()}");
+            var settingsPath = settingsPathValue.Value;
+            Logger.Information($"The settings path is {settingsPath}");
             IConfiguration config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(settingsPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
                 .Build();
 
@@ -254,35 +276,35 @@ internal static class OptionsParser
             var options = section.Get<Options>();
             if (options is not null)
             {
-                _logger.Information("Settings successfully loaded from appsettings.json.");
+                Logger.Information("Settings successfully loaded from appsettings.json.");
 
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (args is [_, ..])
                 {
-                    options.OverrideFromArgs(args, _logger);
-                    _logger.Information("Settings successfully overridden from console args");
+                    options.OverrideFromArgs(args, Logger);
+                    Logger.Information("Settings successfully overridden from console args");
                 }
 
                 // Show the options in the logs
-                options.Show(_logger);
+                options.Show(Logger);
                 return options;
             }
 
 
-            _logger.Error("Configuration section 'options' not found or invalid in appsettings.json.");
+            Logger.Error("Configuration section 'options' not found or invalid in appsettings.json.");
 
 
             return ErrorOr.Error.Unexpected("Unexpedted in Load Settings", "Can't get the options");
         }
         catch (OperationCanceledException)
         {
-            _logger.Warning("Settings loading was cancelled.");
+            Logger.Warning("Settings loading was cancelled.");
             throw;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Unexpected error occurred while loading settings.");
+            Logger.Error(ex, "Unexpected error occurred while loading settings.");
             return ErrorOr.Error.Failure(
                 code: ex.Source ?? "LoadSettingsException",
                 description: ex.Message

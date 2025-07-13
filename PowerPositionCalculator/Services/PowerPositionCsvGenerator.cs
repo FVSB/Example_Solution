@@ -25,10 +25,10 @@ namespace PowerPositionCalculator
     public static class CsvGenerator
     {
         // Semaphore to ensure exclusive file write access.
-        private static readonly SemaphoreSlim _fileSemaphore = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim FileSemaphore = new SemaphoreSlim(1, 1);
 
         // Logger specific for this class.
-        private static readonly ILogger _logger = Log.ForContext(typeof(CsvGenerator));
+        private static readonly ILogger Logger = Log.ForContext(typeof(CsvGenerator));
 
         /// <summary>
         /// Asynchronously creates a CSV file containing 24 hourly volume records for a specific date and time.
@@ -52,13 +52,13 @@ namespace PowerPositionCalculator
             {
                 var lengthInfo = volumes is not null ? volumes.Length.ToString() : "null";
                 var message = $"The volumes array must contain exactly 24 elements, but has {lengthInfo}.";
-                _logger.Error("CSV creation error: {ErrorMessage} with input volumes length: {VolumesLength}", message, lengthInfo);
+                Logger.Error("CSV creation error: {ErrorMessage} with input volumes length: {VolumesLength}", message, lengthInfo);
                 throw new ArgumentException(message);
             }
 
             string fileName = $"PowerPosition_{dateTime:yyyyMMdd}_{dateTime:HHmm}.csv";
             string fullPath = Path.Combine(folderPath, fileName);
-            _logger.Information("Starting CSV file creation at {FilePath}", fullPath);
+            Logger.Information("Starting CSV file creation at {FilePath}", fullPath);
 
             var records = new List<PowerPositionRecord>(24);
             for (int i = 0; i < 24; i++)
@@ -75,7 +75,7 @@ namespace PowerPositionCalculator
 
             try
             {
-                await _fileSemaphore.WaitAsync(ct);
+                await FileSemaphore.WaitAsync(ct);
                 try
                 {
                     await using var writer = new StreamWriter(fullPath);
@@ -84,14 +84,14 @@ namespace PowerPositionCalculator
                 }
                 finally
                 {
-                    _fileSemaphore.Release();
+                    FileSemaphore.Release();
                 }
 
-                _logger.Information("CSV file successfully created at {FilePath}", fullPath);
+                Logger.Information("CSV file successfully created at {FilePath}", fullPath);
             }
             catch (Exception ex) when (!(ex is OperationCanceledException))
             {
-                _logger.Error(ex, "Failed to write CSV file at {FilePath}", fullPath);
+                Logger.Error(ex, "Failed to write CSV file at {FilePath}", fullPath);
                 throw;
             }
 

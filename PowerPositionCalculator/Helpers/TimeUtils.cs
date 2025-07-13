@@ -13,7 +13,7 @@ namespace PowerPositionCalculator;
     /// </summary>
     public static  class TimeUtils
     {
-        private static readonly ILogger _logger = Log.ForContext(typeof(TimeUtils));
+        private static readonly ILogger Logger = Log.ForContext(typeof(TimeUtils));
         
         /// <summary>
         /// Gets the current date and time in the London timezone.
@@ -32,17 +32,17 @@ namespace PowerPositionCalculator;
                 // Convert UTC time to London time
                 DateTime londonNow = TimeZoneInfo.ConvertTimeFromUtc(utcNow, londonTimeZone);
 
-                _logger?.Debug("Retrieved current London time: {LondonNow}", londonNow);
+                Logger?.Debug("Retrieved current London time: {LondonNow}", londonNow);
                 return londonNow;
             }
             catch (TimeZoneNotFoundException ex)
             {
-                _logger?.Error(ex, "London timezone not found on this system.");
+                Logger?.Error(ex, "London timezone not found on this system.");
                 throw;
             }
             catch (InvalidTimeZoneException ex)
             {
-                _logger?.Error(ex, "London timezone data is invalid.");
+                Logger?.Error(ex, "London timezone data is invalid.");
                 throw;
             }
         }

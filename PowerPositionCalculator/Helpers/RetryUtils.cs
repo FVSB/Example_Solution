@@ -8,7 +8,7 @@ namespace PowerPositionCalculator;
 
 public static  class RetryUtils
 {
-    private static readonly ILogger _logger = Log.ForContext(typeof(RetryUtils));
+    private static readonly ILogger Logger = Log.ForContext(typeof(RetryUtils));
     /// <summary>
     /// Executes the specified delegate with retry logic for transient errors.
     /// </summary>
@@ -36,7 +36,7 @@ public static  class RetryUtils
             try
             {
                 ct.ThrowIfCancellationRequested();
-                _logger?.Debug("Attempt {Attempt} of {MaxAttempts} for action {Action}.", attempt, maxAttempts,
+                Logger?.Debug("Attempt {Attempt} of {MaxAttempts} for action {Action}.", attempt, maxAttempts,
                     action.Method.Name);
 
                 // Invoke the delegate using reflection
@@ -46,14 +46,14 @@ public static  class RetryUtils
                 {
                     // Await the async result
                     TResult awaitedResult = await taskResult;
-                    _logger?.Information("Action {Action} succeeded on attempt {Attempt}.", action.Method.Name,
+                    Logger?.Information("Action {Action} succeeded on attempt {Attempt}.", action.Method.Name,
                         attempt);
                     return awaitedResult;
                 }
                 else if (result is TResult directResult)
                 {
                     // Return direct result if not async
-                    _logger?.Information("Action {Action} succeeded on attempt {Attempt}.", action.Method.Name,
+                    Logger?.Information("Action {Action} succeeded on attempt {Attempt}.", action.Method.Name,
                         attempt);
                     return directResult;
                 }
@@ -61,14 +61,14 @@ public static  class RetryUtils
                 {
                     var error = Error.Failure("InvalidOperationException", "Result is not of the expected type.");
                     errors.Add(error);
-                    _logger?.Error("Action {Action} returned an unexpected result type on attempt {Attempt}.",
+                    Logger?.Error("Action {Action} returned an unexpected result type on attempt {Attempt}.",
                         action.Method.Name, attempt);
                     return errors;
                 }
             }
             catch (OperationCanceledException)
             {
-                _logger?.Warning("Operation was cancelled during attempt {Attempt} of {Action}.", attempt,
+                Logger?.Warning("Operation was cancelled during attempt {Attempt} of {Action}.", attempt,
                     action.Method.Name);
                 throw;
             }
@@ -93,26 +93,26 @@ public static  class RetryUtils
                     description: $"{ex.GetType().Name}: {ex.Message}");
                 errors.Add(error);
 
-                _logger?.Warning(ex, "Attempt {Attempt} failed with {Exception}. Retry eligible: {CanRetry}",
+                Logger?.Warning(ex, "Attempt {Attempt} failed with {Exception}. Retry eligible: {CanRetry}",
                     attempt, ex.GetType().Name, canRetry);
 
                 if (!canRetry || attempt >= maxAttempts)
                 {
-                    _logger?.Error("Action {Action} failed after {MaxAttempts} attempts. Returning accumulated errors.",
+                    Logger?.Error("Action {Action} failed after {MaxAttempts} attempts. Returning accumulated errors.",
                         action.Method.Name, maxAttempts);
                     return errors;
                 }
 
                 if (delayMilliseconds > 0)
                 {
-                    _logger?.Debug("Waiting {Delay} ms before next retry of action {Action}.", delayMilliseconds,
+                    Logger?.Debug("Waiting {Delay} ms before next retry of action {Action}.", delayMilliseconds,
                         action.Method.Name);
                     await Task.Delay(delayMilliseconds, ct).ConfigureAwait(false);
                 }
             }
         }
 
-        _logger?.Error("Retry logic exhausted for action {Action}. Total errors: {@Errors}", action.Method.Name,
+        Logger?.Error("Retry logic exhausted for action {Action}. Total errors: {@Errors}", action.Method.Name,
             errors);
         return errors;
     }

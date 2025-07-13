@@ -65,8 +65,12 @@ TestResults/
 .vs/
 *.vs/
 
-## Ignore any folder named 'datos' anywhere in the project
-**/datos/
-**/datos/**
+## Ignore any folder named 'output' anywhere in the project
+**/output/
+**/output/**
+
+## Ignore any folder named 'logs' anywhere in the project
+**/logs/
+**/logs/**
 
 # End of .gitignore
